@@ -19,18 +19,52 @@ var snakeGame = (function () {
     let dx = 1;
     let dy = 0;
     let currentStep = 1;
+    let foodCounter = 0;
 
-    let playStep = () => {
-        headX += dx;
-        headY += dy;
+
+    let playStep = (direction) => {
+        dx = (direction - 38) % 2;
+        dy = (direction - 39) % 2;
+        headX = (WIDTH - 1) * (WIDTH - (headX + dx)) % WIDTH;
+        headY = (HEIGHT - 1) * (HEIGHT - (headY + dy)) % HEIGHT;
         let newHeadCell = getCell(headX, headY);
+        let newFoodCell = getCell(Math.ceil(Math.random() * WIDTH), Math.ceil(Math.random() * HEIGHT));
 
-        removeSnakeCells();      
+        removeSnakeCells();
         addSnakeToCell(newHeadCell);
+        removeFoodCells();
+        addFoodToCell(newFoodCell);
         setCellStep(newHeadCell, currentStep);
 
         currentStep++;
         return true;
+    }
+
+    let removeFoodCells = () => {
+        for (let foodCell of document.getElementsByClassName('food snake')) {
+            removeFoodFromCell(foodCell);
+            foodCounter--;
+        }
+    }
+
+    let getCellClass = (cell) => {
+        return cell.className;
+    }
+
+    let removeFoodFromCell = cell => {
+        cell.className = cell.className.replace('food', '');
+    }
+
+    let getFoodCells = () => {
+        // Можно находить элементы DOM по классу
+        return document.getElementsByClassName('food');
+    }
+
+    let addFoodToCell = cell => {
+        if (foodCounter == 0 && cell.className == '') {
+            cell.className += ' food';
+            foodCounter++;
+        }
     }
 
     let removeSnakeCells = () => {
@@ -63,7 +97,7 @@ var snakeGame = (function () {
         cell.setAttribute('data-step', step);
     }
 
-    let getCellStep = cell =>  {
+    let getCellStep = cell => {
         // Явное преобразование строки к числу через объект-обертку.
         return new Number(cell.getAttribute('data-step'));
     }
@@ -77,18 +111,17 @@ var snakeGame = (function () {
 
 // Главный цикл игры.
 let timer = setInterval(function () {
-    if (!snakeGame.playStep())
-    {
+    if (!snakeGame.playStep(direction)) {
         // Игра закончена - останавливаем цикл.
         clearInterval(timer);
         alert('Game Over! Score: ' + snakeGame.getScore());
     }
 }, 500);
 
+var direction = 39;
 // Обработка действий пользователя.
 document.onkeydown = e => {
-    switch (e.keyCode)
-    {
-        // http://keycode.info/
+    if (e.keyCode < 41 && e.keyCode > 36) {
+        direction = e.keyCode;
     }
 }
